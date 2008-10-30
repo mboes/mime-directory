@@ -6,6 +6,7 @@ description:
         A library for parsing/printing text/directory mime type.
 category:       Text
 license:        LGPL
+license-file:	LICENSE
 copyright:      (c) 2008. Mathieu Boespflug <mboes@tweag.net>
 cabal-version:  >= 1.2.0
 build-type:     Simple
