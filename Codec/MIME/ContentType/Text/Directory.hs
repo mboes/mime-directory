@@ -4,7 +4,8 @@ module Codec.MIME.ContentType.Text.Directory
     , ValueParser
     , nakedType, (@@)
     , parseDirectory
-    , pa_URI, pa_text, pa_date, pa_dateTime, pa_integer, pa_bool, pa_float, pa_textList
+    , pa_URI, pa_text, pa_date, pa_time, pa_dateTime
+    , pa_integer, pa_bool, pa_float, pa_textList
     , many
     , printDirectory
     , printProperty) where
@@ -41,7 +42,7 @@ nakedType name = Type { type_group = Nothing, type_name = name }
 
 -- | Check whether the given property is an instance of the given type.
 (@@) :: Property u -> B.ByteString -> Bool
-p @@ name = prop_type p == nakedType name
+prop @@ name = prop_type prop == nakedType name
 
 instance Ord Type where
     compare x y = let f = B.map toLower . type_name
@@ -184,13 +185,14 @@ pa_integer _ = (:[]) . Integer . fst . fromJust . B.readInteger
 pa_bool :: ValueParser u
 pa_bool _ "TRUE" = [Boolean True]
 pa_bool _ "FALSE" = [Boolean False]
+pa_bool _ _ = error "Not a valid boolean."
 
 pa_float :: ValueParser u
 pa_float _ = (:[]) . Float . read . B.unpack
 
 pa_textList :: ValueParser u
 pa_textList _ "" = []
-pa_textList _ xs = map (Text . B.pack . B.unpack) $ B.foldr f [B.empty] xs
+pa_textList _ s = map (Text . B.pack . B.unpack) $ B.foldr f [B.empty] s
     where f ','  (xs:xss) = B.empty : xs : xss
           f '\\' ("":xs:xss) = B.cons ',' xs : xss
           f '\\' (xs:xss) | Just ('n',_)  <- B.uncons xs = B.cons '\n' xs : xss
