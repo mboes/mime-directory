@@ -3,7 +3,7 @@ module Codec.MIME.ContentType.Text.Directory
     , Rfc2425Types
     , ValueParser
     , nakedType, (@@)
-    , parseDirectory
+    , parseDirectory, parseDirectory', fromList
     , pa_URI, pa_text, pa_date, pa_time, pa_dateTime
     , pa_integer, pa_bool, pa_float, pa_textList
     , many
@@ -16,10 +16,11 @@ import Data.Char (toLower)
 import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
 import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.Map as Map
 import System.IO.Unsafe
 
 
-type Directory u = [Property u]
+type Directory u = Map.Map Type [Property u]
 
 data Property u = Prop
     { prop_type :: Type
@@ -119,12 +120,26 @@ capture pat = P $ \s -> unsafePerformIO $ do
                            Just (_, _, s', captures) -> (captures, s')
                            Nothing -> error $ "Parse error: " ++ show (B.unpack s)
 
+-- | Produces a map where properties are grouped together using their type as key.
 parseDirectory :: ValueParser u
                -- ^ Given a Property Type and a list of parameters,
                -- parse a string representation into a Value.
                -> B.ByteString
                -> Directory u
-parseDirectory valparse = concatMap (fst . unP (pa_property valparse)) . unfoldLines
+parseDirectory valparse = fromList . parseDirectory' valparse
+
+-- | An alternative version of |parseDirectory| that produces a list
+-- of properties rather than a mapping from property types to
+-- properties. Note that here properties in the list are in the same
+-- order as in the input string.
+parseDirectory' :: ValueParser u
+                -> B.ByteString
+                -> [Property u]
+parseDirectory' valparse = concatMap (fst . unP (pa_property valparse)) . unfoldLines
+
+-- | Build a directory from a list of properties.
+fromList :: [Property u] -> Directory u
+fromList = Map.fromListWith (\x y -> x ++ y) . map (\p -> (prop_type p, [p]))
 
 -- | Pa_ a string representation into a property. Note that the
 -- return type here is actually a list of properties, because we
