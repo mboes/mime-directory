@@ -1,12 +1,12 @@
 module Codec.MIME.ContentType.Text.Directory
-    ( Directory, Property(..), Type(..), Parameter(..), Value(..)
-    , Rfc2425Value
-    , ValueParser
+    ( Directory, Property(..), Type(..), Parameter(..)
+    , Value(..), Rfc2425Value, PrintValue(..), ValueParser
     , nakedType, (@@)
-    , parseDirectory, parseDirectory', fromList
+    , parseDirectory, parseDirectory', fromList, groupByBeginEnd
     , pa_URI, pa_text, pa_date, pa_time, pa_dateTime
     , pa_integer, pa_bool, pa_float, pa_textList
     , many
+    , escape
     , printDirectory
     , printProperty) where
 
@@ -141,6 +141,7 @@ parseDirectory' :: ValueParser u
                -> [Property u]
 parseDirectory' valparse = concatMap (fst . unP (pa_property valparse)) . unfoldLines
 
+-- | Group properties into blocks delimited by @begin..end@ pairs.
 groupByBeginEnd :: [Property u] -> [[Property u]]
 groupByBeginEnd [] = []
 groupByBeginEnd xs = tail $ foldr f [[]] xs
@@ -241,13 +242,23 @@ many pa tps input = map (head . pa tps) $ breakAll input
 showBS :: Show a => a -> B.ByteString
 showBS = B.pack . show
 
+-- | Escape any occurrence of the characters given as first argument with a
+-- backslash. Newlines are always replaced by the two character sequence
+-- |"\\n"|. The backslash character is always escaped.
+escape :: B.ByteString -> B.ByteString -> B.ByteString
+escape chars = B.foldr f "" where
+    f '\r' xs | Just ('\n', xs') <- B.uncons xs = B.append "\\n" xs'
+              | otherwise = error "CR not followed by LF."
+    f x xs | x `B.elem` B.cons '\\' chars = B.cons '\\' (B.cons x xs)
+           | otherwise = B.cons x xs
+
 -- Pretty printing of values
 class PrintValue a where
     printValue :: a -> B.ByteString
 
 instance PrintValue u => PrintValue (Value u) where
     printValue (URI v) = showBS v
-    printValue (Text v) = v
+    printValue (Text v) = escape "," $ v
     printValue (Date v) = showBS v
     printValue (Time v) = showBS v
     printValue (DateTime v) = showBS v
