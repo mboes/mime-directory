@@ -3,9 +3,9 @@ version:        0.1
 author:		Mathieu Boespflug
 maintainer:	Mathieu Boespflug <mboes@tweag.net>
 homepage:       http://code.haskell.org/~mboes/mime-directory.git
-synopsis:       A library for parsing/printing text/directory mime type.
+synopsis:       A library for parsing/printing the text/directory mime type.
 description:
-        A library for parsing/printing text/directory mime type.
+        A library for parsing\/printing the text\/directory mime type.
 category:       Text
 license:        LGPL
 license-file:	LICENSE
