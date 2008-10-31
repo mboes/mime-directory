@@ -20,7 +20,11 @@ import qualified Data.Map as Map
 import System.IO.Unsafe
 
 
-type Directory u = Map.Map Type [Property u]
+-- | A directory is a list of groups of semantically related entities. These
+-- entities are grouped together in RFC 2425 using @BEGIN ... END@ pairs.
+-- Within a group properties are further grouped together by the property
+-- types.
+type Directory u = [Map.Map Type [Property u]]
 
 data Property u = Prop
     { prop_type :: Type
@@ -122,10 +126,10 @@ capture pat = P $ \s -> unsafePerformIO $ do
 
 -- | Produces a map where properties are grouped together using their type as key.
 parseDirectory :: ValueParser u
-               -- ^ Given a Property Type and a list of parameters,
-               -- parse a string representation into a Value.
-               -> B.ByteString
-               -> Directory u
+                -- ^ Given a Property Type and a list of parameters,
+                -- parse a string representation into a Value.
+                -> B.ByteString
+                -> Directory u
 parseDirectory valparse = fromList . parseDirectory' valparse
 
 -- | An alternative version of |parseDirectory| that produces a list
@@ -133,13 +137,21 @@ parseDirectory valparse = fromList . parseDirectory' valparse
 -- properties. Note that here properties in the list are in the same
 -- order as in the input string.
 parseDirectory' :: ValueParser u
-                -> B.ByteString
-                -> [Property u]
+               -> B.ByteString
+               -> [Property u]
 parseDirectory' valparse = concatMap (fst . unP (pa_property valparse)) . unfoldLines
+
+groupByBeginEnd :: [Property u] -> [[Property u]]
+groupByBeginEnd [] = []
+groupByBeginEnd xs = tail $ foldr f [[]] xs
+    where f p (ps:pss) | p @@ "begin" =
+                           [] : (p:ps) : pss
+          f p (ps:pss) = (p:ps):pss
 
 -- | Build a directory from a list of properties.
 fromList :: [Property u] -> Directory u
-fromList = Map.fromListWith (\x y -> x ++ y) . map (\p -> (prop_type p, [p]))
+fromList = map (Map.fromListWith (\x y -> x ++ y) . map (\p -> (prop_type p, [p])))
+           . groupByBeginEnd
 
 -- | Pa_ a string representation into a property. Note that the
 -- return type here is actually a list of properties, because we
