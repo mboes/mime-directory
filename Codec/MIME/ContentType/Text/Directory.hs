@@ -1,6 +1,6 @@
 module Codec.MIME.ContentType.Text.Directory
     ( Directory, Property(..), Type(..), Parameter(..), Value(..)
-    , Rfc2425Types
+    , Rfc2425Value
     , ValueParser
     , nakedType, (@@)
     , parseDirectory, parseDirectory', fromList
@@ -72,9 +72,9 @@ data Value u = URI URI
 
 -- | Instantiate Value with this phantom type to indicate that property types
 -- should be none other than those defined in rfc2425.
-data Rfc2425Types
+data Rfc2425Value
 
-instance Show Rfc2425Types where
+instance Show Rfc2425Value where
     show _ = undefined
 
 -- | The type of parsers for property values, for instance to read an integer
@@ -245,7 +245,7 @@ instance PrintValue u => PrintValue (Value u) where
     printValue (Float v) = showBS v
     printValue (IANAValue v) = printValue v
 
-instance PrintValue Rfc2425Types where
+instance PrintValue Rfc2425Value where
     printValue _ = error "No other types in RFC 2425."
 
 printDirectory :: PrintValue u => [Property u] -> B.ByteString
