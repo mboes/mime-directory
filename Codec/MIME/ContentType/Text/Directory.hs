@@ -223,8 +223,10 @@ pa_textList _ "" = []
 pa_textList _ s = map (Text . B.pack . B.unpack) $ B.foldr f [B.empty] s
     where f ','  (xs:xss) = B.empty : xs : xss
           f '\\' ("":xs:xss) = B.cons ',' xs : xss
-          f '\\' (xs:xss) | Just ('n',_)  <- B.uncons xs = B.cons '\n' xs : xss
-          f '\\' (xs:xss) | Just ('N',_)  <- B.uncons xs = B.cons '\n' xs : xss
+          f '\\' (xs:xss) | Just ('n',_)  <- B.uncons xs =
+                            B.append "\r\n" xs : xss
+          f '\\' (xs:xss) | Just ('N',_)  <- B.uncons xs =
+                            B.append "\r\n" xs : xss
           f '\\' (xs:xss) | Just ('\\',_) <- B.uncons xs = B.cons '\\' xs : xss
           f x (xs:xss) = B.cons x xs : xss
 
