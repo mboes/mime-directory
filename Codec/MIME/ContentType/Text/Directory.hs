@@ -17,6 +17,7 @@ import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as Map
+import Control.Monad (liftM)
 import System.IO.Unsafe
 
 
@@ -55,7 +56,7 @@ instance Ord Type where
 
 data Parameter = Param
     { param_name :: B.ByteString
-    , param_value :: B.ByteString }
+    , param_values :: [B.ByteString] }
                  deriving Show
 
 type URI = B.ByteString
@@ -109,7 +110,7 @@ instance Monad P where
 p :: B.ByteString   -- ^ Text of the regular expression.
   -> P B.ByteString -- ^ The matching part of the input.
 p pat =
-    let Right r = unsafePerformIO $ compile compUngreedy execAnchored pat
+    let Right r = unsafePerformIO $ compile compBlank execAnchored pat
     in P $ \s -> unsafePerformIO $ do
                    Right result <- regexec r s
                    return $ case result of
@@ -120,13 +121,17 @@ p pat =
 capture :: B.ByteString     -- ^ Text of the regular expression containing capturing groups.
         -> P [B.ByteString] -- ^ The captured subparts of the input.
 capture pat =
-    let Right r = unsafePerformIO $ compile compUngreedy execAnchored pat
+    let Right r = unsafePerformIO $ compile compBlank execAnchored pat
     in P $ \s -> unsafePerformIO $ do
                    Right result <- regexec r s
                    return $ case result of
                               Just (_, _, s', captures) -> (captures, s')
                               Nothing -> error $ "Parse error: "
                                          ++ take 50 (show (B.unpack s)) ++ " ..."
+
+-- | Parse one character in the string.
+nextChar :: P Char
+nextChar = P $ \s -> (B.head s, B.tail s)
 
 -- | Produces a map where properties are grouped together using their type as key.
 parseDirectory :: ValueParser u
@@ -167,8 +172,9 @@ pa_property :: ValueParser u
               -- string representation into a (list of) Value.
               -> P [Property u]
 pa_property valparse = do
-  [groupt, typt, sept] <- capture "(?:((?:[[:alnum:]]|-)+).)?((?:[[:alnum:]]|-)+)(:|;)"
-  params <- case B.unpack sept of
+  [groupt, typt, sept] <-
+      capture "(?U)(?:((?:[[:alnum:]]|-)+).)?((?:[[:alnum:]]|-)+)(:|;)"
+  params <- case sept of
               ";" -> pa_parameterList
               ":" -> return []
   rest <- p ".*$"
@@ -181,13 +187,21 @@ pa_property valparse = do
 
 pa_parameterList :: P [Parameter]
 pa_parameterList = aux where
-    parameter = capture "((?:[[:alnum:]]|-)+)=(?:([^;:,\"]*)|\"([^\"]*)\")(,|:)"
-    aux = do [name,val,qval,sep] <- parameter
+    paramName  = capture "((?:[[:alnum:]]|-)+)="
+    paramValue = capture "(?:([^,;:\"]*)|\"([^\"]*)\")(,?)"
+    paramValues = do
+      [val,qval,sep] <- paramValue
+      vs <- case sep of
+              "," -> paramValues
+              _ -> return []
+      return $ if B.null qval then val:vs else qval:vs
+    aux = do [name] <- paramName
+             vs <- paramValues
+             sep <- nextChar
              ps <- case sep of
-                     "," -> aux
-                     ":" -> return []
-             let value = if B.null val then qval else val
-             return $ Param { param_name = name, param_value = value } : ps
+                     ';' -> aux
+                     ':' -> return []
+             return $ Param { param_name = name, param_values = vs } : ps
 
 -- A few canned parsers for value types defined in rfc2425
 
@@ -299,4 +313,5 @@ printType typ = case type_group typ of
                   Nothing -> type_name typ
 
 printParameter :: Parameter -> B.ByteString
-printParameter param = B.concat [param_name param, "=", param_value param]
+printParameter param = B.concat [param_name param, "="
+                                , B.intercalate "," $ param_values param]
