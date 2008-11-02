@@ -7,7 +7,7 @@ module Codec.MIME.ContentType.Text.Directory
     , pa_integer, pa_bool, pa_float, pa_textList
     , many
     , escape
-    , printDirectory
+    , printDirectory, printDirectory'
     , printProperty) where
 
 import Data.Time
@@ -278,8 +278,11 @@ instance PrintValue u => PrintValue (Value u) where
 instance PrintValue Rfc2425Value where
     printValue _ = error "No other types in RFC 2425."
 
-printDirectory :: PrintValue u => [Property u] -> B.ByteString
-printDirectory props = B.intercalate "\r\n" $ map printProperty props
+printDirectory :: PrintValue u => Directory u -> B.ByteString
+printDirectory = printDirectory' . concat . concat . map Map.elems
+
+printDirectory' :: PrintValue u => [Property u] -> B.ByteString
+printDirectory' props = B.intercalate "\r\n" $ map printProperty props
 
 printProperty :: PrintValue u => Property u -> B.ByteString
 printProperty prop =
