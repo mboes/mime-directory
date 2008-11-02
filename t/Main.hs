@@ -17,4 +17,4 @@ main = do
         _ -> printUsage
   input <- B.hGetContents handle
   let dir = parseDirectory' pa_text input :: [Property Rfc2425Value]
-  B.putStr $ printDirectory' dir
+  putStr $ show dir
