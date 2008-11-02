@@ -2,6 +2,8 @@ module Codec.MIME.ContentType.Text.Directory
     ( Directory, Property(..), Type(..), Parameter(..)
     , Value(..), Rfc2425Value, PrintValue(..), ValueParser
     , nakedType, (@@)
+    , lookupParameter
+    , decodeValue, encodeValue
     , parseDirectory, parseDirectory', fromList, groupByBeginEnd
     , pa_URI, pa_text, pa_date, pa_time, pa_dateTime
     , pa_integer, pa_bool, pa_float, pa_textList
@@ -15,6 +17,7 @@ import System.Locale
 import Data.Char (toLower)
 import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
+import qualified Codec.Binary.Base64.String as Base64
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as Map
 import Control.Monad (liftM)
@@ -54,6 +57,13 @@ data Parameter = Param
     { param_name :: B.ByteString
     , param_values :: [B.ByteString] }
                  deriving Show
+
+-- | Find the parameter values for a given parameter name.
+lookupParameter :: B.ByteString -> [Parameter] -> Maybe [B.ByteString]
+lookupParameter pname [] = Nothing
+lookupParameter pname (p:ps)
+    | param_name p == B.map toLower pname = Just (param_values p)
+    | otherwise = lookupParameter pname ps
 
 type URI = B.ByteString
 
@@ -179,7 +189,7 @@ pa_property valparse = do
       mkprop v = Prop { prop_type = typ
                       , prop_parameters = params
                       , prop_value = v }
-  return $ map mkprop $ valparse (typ, params) (decode params rest)
+  return $ map mkprop $ valparse (typ, params) (decodeValue params rest)
 
 pa_parameterList :: P [Parameter]
 pa_parameterList = aux where
@@ -198,6 +208,22 @@ pa_parameterList = aux where
                      ';' -> aux
                      ':' -> return []
              return $ Param { param_name = name, param_values = vs } : ps
+
+-- | Properties may indicate an encoding, so this decodes the value
+-- if need be before parsing.
+decodeValue = codec Base64.decode
+
+-- | Properties may indicate an encoding, so this encodes the value if need be
+-- after printing.
+encodeValue = codec Base64.encode
+
+codec :: (String -> String) -> [Parameter] -> B.ByteString -> B.ByteString
+codec f params input =
+    case lookupParameter "encoding" params of
+      Nothing -> input
+      Just ["b"] -> B.pack $ f $ B.unpack input
+      Just ["B"] -> B.pack $ f $ B.unpack input
+      _ -> error "Unknown encoding."
 
 -- A few canned parsers for value types defined in rfc2425
 
@@ -296,12 +322,13 @@ printDirectory' props = B.intercalate "\r\n" $ map printProperty props
 
 printProperty :: PrintValue u => Property u -> B.ByteString
 printProperty prop =
-    if null (prop_parameters prop)
+    if null params
     then B.concat [ printType (prop_type prop), ":"
-                  , printValue (prop_value prop) ]
+                  , encodeValue params $ printValue $ prop_value prop ]
     else B.concat [ printType (prop_type prop), ";"
                   , B.concat $ map printParameter $ prop_parameters prop, ":"
-                  , printValue (prop_value prop) ]
+                  , printValue $ prop_value prop ]
+    where params = prop_parameters prop
 
 printType :: Type -> B.ByteString
 printType typ = case type_group typ of
