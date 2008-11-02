@@ -1,5 +1,5 @@
 name:           mime-directory
-version:        0.1
+version:        0.2
 author:		Mathieu Boespflug
 maintainer:	Mathieu Boespflug <mboes@tweag.net>
 homepage:       http://code.haskell.org/~mboes/mime-directory.git
