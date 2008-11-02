@@ -6,7 +6,7 @@ module Codec.MIME.ContentType.Text.Directory
     , decodeValue, encodeValue
     , parseDirectory, parseDirectory', fromList, groupByBeginEnd
     , pa_URI, pa_text, pa_date, pa_time, pa_dateTime
-    , pa_integer, pa_bool, pa_float, pa_textList
+    , pa_integer, pa_boolean, pa_float, pa_textList
     , many
     , escape
     , printDirectory, printDirectory'
@@ -251,10 +251,10 @@ pa_dateTime _ =
 pa_integer :: ValueParser u
 pa_integer _ = (:[]) . Integer . fst . fromJust . B.readInteger
 
-pa_bool :: ValueParser u
-pa_bool _ "TRUE" = [Boolean True]
-pa_bool _ "FALSE" = [Boolean False]
-pa_bool _ _ = error "Not a valid boolean."
+pa_boolean :: ValueParser u
+pa_boolean _ "TRUE" = [Boolean True]
+pa_boolean _ "FALSE" = [Boolean False]
+pa_boolean _ _ = error "Not a valid boolean."
 
 pa_float :: ValueParser u
 pa_float _ = (:[]) . Float . read . B.unpack
