@@ -158,13 +158,13 @@ fromList :: [Property u] -> Directory u
 fromList = map (Map.fromListWith (\x y -> x ++ y) . map (\p -> (prop_type p, [p])))
            . groupByBeginEnd
 
--- | Pa_ a string representation into a property. Note that the
--- return type here is actually a list of properties, because we
--- desugar properties whose values are lists into a list of
--- properties, one for each element of the value list.
+-- | Parse a string representation into a property. Note that the return type
+-- here is actually a list of properties, because we desugar properties whose
+-- values are lists into a list of properties, one for each element of the
+-- value list.
 pa_property :: ValueParser u
-              -- ^ Given a Property Type and a list of parameters,
-              -- parse a string representation into a (list of) Value.
+              -- ^ Given a Property Type and a list of parameters, parse a
+              -- string representation into a (list of) Value.
               -> P [Property u]
 pa_property valparse = do
   [groupt, typt, sept] <- capture "(?:((?:[[:alnum:]]|-)+).)?((?:[[:alnum:]]|-)+)(:|;)"
