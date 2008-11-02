@@ -108,21 +108,25 @@ instance Monad P where
 
 p :: B.ByteString   -- ^ Text of the regular expression.
   -> P B.ByteString -- ^ The matching part of the input.
-p pat = P $ \s -> unsafePerformIO $ do
-          Right r <- compile compUngreedy execAnchored pat
-          Right result <- regexec r s
-          return $ case result of
-                     Just (_, match, s', _) -> (match, s')
-                     Nothing -> error $ "Parse error: " ++ show (B.unpack s)
+p pat =
+    let Right r = unsafePerformIO $ compile compUngreedy execAnchored pat
+    in P $ \s -> unsafePerformIO $ do
+                   Right result <- regexec r s
+                   return $ case result of
+                              Just (_, match, s', _) -> (match, s')
+                              Nothing -> error $ "Parse error: "
+                                         ++ take 50 (show (B.unpack s)) ++ " ..."
 
 capture :: B.ByteString     -- ^ Text of the regular expression containing capturing groups.
         -> P [B.ByteString] -- ^ The captured subparts of the input.
-capture pat = P $ \s -> unsafePerformIO $ do
-                Right r <- compile compUngreedy execAnchored pat
-                Right result <- regexec r s
-                return $ case result of
-                           Just (_, _, s', captures) -> (captures, s')
-                           Nothing -> error $ "Parse error: " ++ show (B.unpack s)
+capture pat =
+    let Right r = unsafePerformIO $ compile compUngreedy execAnchored pat
+    in P $ \s -> unsafePerformIO $ do
+                   Right result <- regexec r s
+                   return $ case result of
+                              Just (_, _, s', captures) -> (captures, s')
+                              Nothing -> error $ "Parse error: "
+                                         ++ take 50 (show (B.unpack s)) ++ " ..."
 
 -- | Produces a map where properties are grouped together using their type as key.
 parseDirectory :: ValueParser u
@@ -170,19 +174,20 @@ pa_property valparse = do
   rest <- p ".*$"
   let group = if B.null groupt then Nothing else Just groupt
   let typ = Type { type_group = group, type_name = typt }
-      prop v = Prop { prop_type = typ
-                    , prop_parameters = params
-                    , prop_value = v }
-  return $ map prop $ valparse (typ, params) rest
+      mkprop v = Prop { prop_type = typ
+                      , prop_parameters = params
+                      , prop_value = v }
+  return $ map mkprop $ valparse (typ, params) (decode params rest)
 
 pa_parameterList :: P [Parameter]
-pa_parameterList = do
-  [name, val, qval, sep] <- capture "((?:[[:alnum:]]|-)+)=(?:([^;:,\"]*)|\"([^\"]*)\")(,|:)"
-  ps <- case sep of
-          "," -> pa_parameterList
-          ":" -> return []
-  let value = if B.null val then qval else val
-  return $ Param { param_name = name, param_value = value } : ps
+pa_parameterList = aux where
+    parameter = capture "((?:[[:alnum:]]|-)+)=(?:([^;:,\"]*)|\"([^\"]*)\")(,|:)"
+    aux = do [name,val,qval,sep] <- parameter
+             ps <- case sep of
+                     "," -> aux
+                     ":" -> return []
+             let value = if B.null val then qval else val
+             return $ Param { param_name = name, param_value = value } : ps
 
 -- A few canned parsers for value types defined in rfc2425
 
