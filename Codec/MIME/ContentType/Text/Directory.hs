@@ -39,7 +39,7 @@ data Property u = Prop
 data Type = Type
     { type_group :: Maybe B.ByteString
     , type_name :: B.ByteString }
-            deriving (Show, Ord)
+            deriving Show
 
 instance Eq Type where
     x == y = let f = B.map toLower . type_name
@@ -52,6 +52,10 @@ nakedType name = Type { type_group = Nothing, type_name = name }
 -- | Check whether the given property is an instance of the given type.
 (@@) :: Property u -> B.ByteString -> Bool
 prop @@ name = prop_type prop == nakedType name
+
+instance Ord Type where
+    compare x y = let f = B.map toLower . type_name
+                  in compare (f x) (f y)
 
 data Parameter = Param
     { param_name :: B.ByteString
