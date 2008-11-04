@@ -19,7 +19,7 @@ import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
 import qualified Codec.Binary.Base64.String as Base64
 import qualified Data.ByteString.Lazy.Char8 as B
-import qualified Data.ByteString.Lazy.Char8.Folded as I
+import qualified Data.ByteString.Lazy.Char8.Caseless as I
 import qualified Data.Map as Map
 import Control.Monad (liftM)
 import System.IO.Unsafe

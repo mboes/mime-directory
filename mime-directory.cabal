@@ -20,4 +20,4 @@ library
         extensions:      OverloadedStrings, EmptyDataDecls, PatternGuards
                          GeneralizedNewtypeDeriving, DeriveDataTypeable
         exposed-modules: Codec.MIME.ContentType.Text.Directory
-                         Data.ByteString.Lazy.Char8.Folded
+                         Data.ByteString.Lazy.Char8.Caseless

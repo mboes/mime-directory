@@ -1,6 +1,6 @@
 -- | A variant of ByteString where strings differing in the case of some of
 -- its characters are identified.
-module Data.ByteString.Lazy.Char8.Folded
+module Data.ByteString.Lazy.Char8.Caseless
     (ByteString, sensitize, unsensitize, concat, intercalate, pack, unpack) where
 
 import qualified Data.ByteString.Lazy.Char8 as B
