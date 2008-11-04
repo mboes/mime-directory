@@ -19,6 +19,7 @@ import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
 import qualified Codec.Binary.Base64.String as Base64
 import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.ByteString.Lazy.Char8.Folded as I
 import qualified Data.Map as Map
 import Control.Monad (liftM)
 import System.IO.Unsafe
@@ -37,36 +38,28 @@ data Property u = Prop
                   deriving Show
 
 data Type = Type
-    { type_group :: Maybe B.ByteString
-    , type_name :: B.ByteString }
-            deriving Show
-
-instance Eq Type where
-    x == y = let f = B.map toLower . type_name
-             in f x == f y
+    { type_group :: Maybe I.ByteString
+    , type_name :: I.ByteString }
+            deriving (Eq, Ord, Show)
 
 -- | Make a property type without any grouping.
-nakedType :: B.ByteString -> Type
+nakedType :: I.ByteString -> Type
 nakedType name = Type { type_group = Nothing, type_name = name }
 
 -- | Check whether the given property is an instance of the given type.
-(@@) :: Property u -> B.ByteString -> Bool
+(@@) :: Property u -> I.ByteString -> Bool
 prop @@ name = prop_type prop == nakedType name
 
-instance Ord Type where
-    compare x y = let f = B.map toLower . type_name
-                  in compare (f x) (f y)
-
 data Parameter = Param
-    { param_name :: B.ByteString
+    { param_name :: I.ByteString
     , param_values :: [B.ByteString] }
                  deriving Show
 
 -- | Find the parameter values for a given parameter name.
-lookupParameter :: B.ByteString -> [Parameter] -> Maybe [B.ByteString]
+lookupParameter :: I.ByteString -> [Parameter] -> Maybe [B.ByteString]
 lookupParameter pname [] = Nothing
 lookupParameter pname (p:ps)
-    | param_name p == B.map toLower pname = Just (param_values p)
+    | param_name p == pname = Just (param_values p)
     | otherwise = lookupParameter pname ps
 
 type URI = B.ByteString
@@ -188,8 +181,8 @@ pa_property valparse = do
               ";" -> pa_parameterList
               ":" -> return []
   rest <- p ".*$"
-  let group = if B.null groupt then Nothing else Just groupt
-  let typ = Type { type_group = group, type_name = typt }
+  let group = if B.null groupt then Nothing else Just (I.unsensitize groupt)
+  let typ = Type { type_group = group, type_name = I.unsensitize typt }
       mkprop v = Prop { prop_type = typ
                       , prop_parameters = params
                       , prop_value = v }
@@ -211,7 +204,7 @@ pa_parameterList = aux where
              ps <- case sep of
                      ';' -> aux
                      ':' -> return []
-             return $ Param { param_name = name, param_values = vs } : ps
+             return $ Param { param_name = I.unsensitize name, param_values = vs } : ps
 
 -- | Properties may indicate an encoding, so this decodes the value
 -- if need be before parsing.
@@ -335,10 +328,11 @@ printProperty prop =
     where params = prop_parameters prop
 
 printType :: Type -> B.ByteString
-printType typ = case type_group typ of
-                  Just group -> B.concat [group, ".", type_name typ]
-                  Nothing -> type_name typ
+printType typ =
+    I.sensitize $ case type_group typ of
+                    Just group -> I.concat [group, ".", type_name typ]
+                    Nothing -> type_name typ
 
 printParameter :: Parameter -> B.ByteString
-printParameter param = B.concat [param_name param, "="
+printParameter param = B.concat [I.sensitize $ param_name param, "="
                                 , B.intercalate "," $ param_values param]
