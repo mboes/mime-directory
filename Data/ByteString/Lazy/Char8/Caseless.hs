@@ -14,9 +14,12 @@ import Prelude hiding (concat)
 newtype ByteString = I B.ByteString
     deriving (Data, Eq, IsString, Ord, Show, Monoid, Typeable)
 
+-- | Inject a bytestring into a case insensitive bytestring. Note that the case
+-- of all letters in the ByteString is folded to lower case.
 unsensitize :: B.ByteString -> ByteString
 unsensitize = I . B.map toLower
 
+-- | Project back to a regular bytestring.
 sensitize :: ByteString -> B.ByteString
 sensitize (I str) = str
 

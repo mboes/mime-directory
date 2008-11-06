@@ -1,16 +1,26 @@
+-- | Library for parsing and generating the text/directory mime content type.
+-- This library implements all the required mechanisms in RFC 2425, which other
+-- libraries may use to implement parsing and generating specific profiles,
+-- such as vCard.
 module Codec.MIME.ContentType.Text.Directory
-    ( Directory, Property(..), Type(..), Parameter(..)
+    ( -- * Types
+      Directory, Property(..)
+    , Type(..), Parameter(..)
     , Value(..), Rfc2425Value, PrintValue(..), ValueParser
     , nakedType, (@@)
     , lookupParameter
+    -- * Encoding\/decoding values
     , decodeValue, encodeValue
+    , escape
+    -- * Parsing
     , parseDirectory, parseDirectory', fromList, groupByBeginEnd
+    -- ** Value Parsers
     , pa_URI, pa_text, pa_date, pa_time, pa_dateTime
     , pa_integer, pa_boolean, pa_float, pa_textList
+    -- ** Value parser combinators
     , many
-    , escape
-    , printDirectory, printDirectory'
-    , printProperty) where
+    -- * Printing
+    , printDirectory, printDirectory', printProperty) where
 
 import Data.Time
 import System.Locale
@@ -64,6 +74,9 @@ lookupParameter pname (p:ps)
 
 type URI = B.ByteString
 
+-- | This is sufficient to represent values whose specification is defined in
+-- RFC 2425. Values with other specifications can be represented via the
+-- 'IANAValue' constructor.
 data Value u = URI URI
              | Text B.ByteString
              | Date Day
@@ -75,7 +88,7 @@ data Value u = URI URI
 -- Decode a list of values as a list of properties, since rfc2425
 -- considers them to be semantically equivalent.
 --           | List (Value u)
-             | IANAValue u -- an IANA defined type not part of rfc2425
+             | IANAValue u -- ^ An IANA defined type not part of rfc2425
                deriving (Eq, Show)
 
 -- | Instantiate Value with this phantom type to indicate that property types
@@ -144,7 +157,7 @@ parseDirectory :: ValueParser u
                 -> Directory u
 parseDirectory valparse = fromList . parseDirectory' valparse
 
--- | An alternative version of |parseDirectory| that produces a list
+-- | An alternative version of 'parseDirectory' that produces a list
 -- of properties rather than a mapping from property types to
 -- properties. Note that here properties in the list are in the same
 -- order as in the input string.
@@ -284,7 +297,7 @@ showBS = B.pack . show
 
 -- | Escape any occurrence of the characters given as first argument with a
 -- backslash. Newlines are always replaced by the two character sequence
--- |"\\n"|. The backslash character is always escaped.
+-- @"\\n"@. The backslash character is always escaped.
 escape :: B.ByteString -> B.ByteString -> B.ByteString
 escape chars = B.foldr f "" where
     f '\r' xs | Just ('\n', xs') <- B.uncons xs = B.append "\\n" xs'
