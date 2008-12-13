@@ -317,7 +317,7 @@ class PrintValue a where
     printValue :: a -> B.ByteString
 
 instance PrintValue u => PrintValue (Value u) where
-    printValue (URI v) = showBS v
+    printValue (URI v) = v
     printValue (Text v) = escape "," $ v
     printValue (Date v) = showBS v
     printValue (Time v) = showBS v
