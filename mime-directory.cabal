@@ -1,7 +1,7 @@
 name:           mime-directory
 version:        0.5.1
 author:         Mathieu Boespflug
-maintainer:     Mathieu Boespflug <mboes@tweag.net>
+maintainer:     Mathieu Boespflug <mboes - at - tweag.net>
 homepage:       http://code.haskell.org/~mboes/mime-directory.git
 synopsis:       A library for parsing/printing the text/directory mime type.
 description:
@@ -9,7 +9,7 @@ description:
 category:       Text
 license:        LGPL
 license-file:   LICENSE
-copyright:      (c) 2008. Mathieu Boespflug <mboes@tweag.net>
+copyright:      (c) 2008. Mathieu Boespflug <mboes - at - tweag.net>
 cabal-version:  >= 1.6.0
 build-type:     Simple
 tested-with:    GHC == 6.10
