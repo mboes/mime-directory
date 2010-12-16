@@ -10,7 +10,7 @@ category:       Text
 license:        LGPL
 license-file:   LICENSE
 copyright:      (c) 2008. Mathieu Boespflug <mboes@tweag.net>
-cabal-version:  >= 1.2.0
+cabal-version:  >= 1.6.0
 build-type:     Simple
 tested-with:    GHC == 6.10
 
@@ -21,3 +21,7 @@ library
                          GeneralizedNewtypeDeriving, DeriveDataTypeable
         exposed-modules: Codec.MIME.ContentType.Text.Directory
                          Data.ByteString.Lazy.Char8.Caseless
+
+source-repository head
+  type:     git
+  location: git://github.com/mboes/mime-directory
