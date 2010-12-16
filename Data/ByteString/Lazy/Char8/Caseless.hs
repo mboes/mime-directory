@@ -7,12 +7,19 @@ import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Char (toLower)
 import GHC.Exts (IsString)
 import Data.Monoid (Monoid)
-import Data.Generics.Basics (Data, Typeable)
 import Prelude hiding (concat)
+#if defined(__GLASGOW_HASKELL__)
+import Data.Typeable (Typeable)
+import Data.Data (Data)
+#endif
 
 -- | Wrapper for case insensitive strings.
 newtype ByteString = I B.ByteString
-    deriving (Data, Eq, IsString, Ord, Show, Monoid, Typeable)
+    deriving ( Eq, Ord, Show, Monoid
+#if defined(__GLASGOW_HASKELL__)
+             , IsString, Data, Typeable
+#endif
+             )
 
 -- | Inject a bytestring into a case insensitive bytestring. Note that the case
 -- of all letters in the ByteString is folded to lower case.
