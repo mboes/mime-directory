@@ -2,7 +2,7 @@ name:           mime-directory
 version:        0.5.1
 author:         Mathieu Boespflug
 maintainer:     Mathieu Boespflug <mboes - at - tweag.net>
-homepage:       http://code.haskell.org/~mboes/mime-directory.git
+homepage:       http://github.com/mboes/mime-directory
 synopsis:       A library for parsing/printing the text/directory mime type.
 description:
         A library for parsing\/printing the text\/directory mime type.
