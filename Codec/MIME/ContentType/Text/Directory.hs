@@ -30,7 +30,6 @@ module Codec.MIME.ContentType.Text.Directory
     , printDirectory, printDirectory', printProperty) where
 
 import Data.Time
-import System.Locale
 import Data.Char (toLower)
 import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
@@ -38,7 +37,7 @@ import qualified Codec.Binary.Base64.String as Base64
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.ByteString.Lazy.Char8.Caseless as I
 import qualified Data.Map as Map
-import Control.Monad (liftM)
+import Control.Monad (liftM, ap)
 import System.IO.Unsafe
 
 
@@ -126,8 +125,15 @@ unfoldLines s | B.null s = []
 
 newtype P a = P { unP :: B.ByteString -> (a, B.ByteString) }
 
+instance Functor P where
+    fmap = liftM
+
+instance Applicative P where
+    pure x = P $ \s -> (x, s)
+    (<*>) = ap
+
 instance Monad P where
-    return x = P $ \s -> (x, s)
+    return = pure
     m >>= k = P $ \s -> let (a, s') = unP m s in unP (k a) s'
 
 p :: B.ByteString   -- ^ Text of the regular expression.
