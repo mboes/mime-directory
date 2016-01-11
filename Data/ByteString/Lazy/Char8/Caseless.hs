@@ -6,7 +6,14 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Data.ByteString.Lazy.Char8.Caseless
-    (ByteString, sensitize, unsensitize, concat, intercalate, pack, unpack) where
+    ( ByteString
+    , sensitize
+    , unsensitize
+    , concat
+    , intercalate
+    , pack
+    , unpack
+    ) where
 
 import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Char (toLower)

@@ -16,23 +16,43 @@
 
 module Codec.MIME.ContentType.Text.Directory
     ( -- * Types
-      Directory, Property(..)
-    , Type(..), Parameter(..)
-    , Value(..), Rfc2425Value, PrintValue(..), ValueParser
-    , nakedType, (@@)
+      Directory
+    , Property(..)
+    , Type(..)
+    , Parameter(..)
+    , Value(..)
+    , Rfc2425Value
+    , PrintValue(..)
+    , ValueParser
+    , nakedType
+    , (@@)
     , lookupParameter
     -- * Encoding\/decoding values
-    , decodeValue, encodeValue
+    , decodeValue
+    , encodeValue
     , escape
     -- * Parsing
-    , parseDirectory, parseDirectory', fromList, groupByBeginEnd
+    , parseDirectory
+    , parseDirectory'
+    , fromList
+    , groupByBeginEnd
     -- ** Value Parsers
-    , pa_URI, pa_text, pa_date, pa_time, pa_dateTime
-    , pa_integer, pa_boolean, pa_float, pa_textList
+    , pa_URI
+    , pa_text
+    , pa_date
+    , pa_time
+    , pa_dateTime
+    , pa_integer
+    , pa_boolean
+    , pa_float
+    , pa_textList
     -- ** Value parser combinators
     , many
     -- * Printing
-    , printDirectory, printDirectory', printProperty) where
+    , printDirectory
+    , printDirectory'
+    , printProperty
+    ) where
 
 import Data.Time
 import Data.Maybe (fromJust)
