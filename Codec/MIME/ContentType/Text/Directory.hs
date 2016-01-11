@@ -259,16 +259,16 @@ pa_text tps = take 1 . pa_textList tps
 
 pa_date :: ValueParser u
 pa_date _ =
-    (:[]) . Date . readTime defaultTimeLocale (iso8601DateFormat Nothing) . B.unpack
+    (:[]) . Date . parseTimeOrError True defaultTimeLocale (iso8601DateFormat Nothing) . B.unpack
 
 pa_time :: ValueParser u
 pa_time _ =
-    (:[]) . Time . utctDayTime . readTime defaultTimeLocale "%T" . B.unpack
+    (:[]) . Time . utctDayTime . parseTimeOrError True defaultTimeLocale "%T" . B.unpack
 
 pa_dateTime :: ValueParser u
 pa_dateTime _ =
     (:[]) . DateTime .
-    readTime defaultTimeLocale (iso8601DateFormat (Just "T%T")) .
+    parseTimeOrError True defaultTimeLocale (iso8601DateFormat (Just "T%T")) .
     B.unpack
 
 pa_integer :: ValueParser u
