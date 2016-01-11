@@ -48,7 +48,7 @@ install:
 - case "$BUILD" in
     stack)
       stack $ARGS setup --no-terminal;
-      stack build --only-snapshot --test
+      stack $ARGS build --only-snapshot --test
       ;;
     cabal)
       travis_retry cabal update;
