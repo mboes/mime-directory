@@ -9,6 +9,11 @@
 -- This library implements all the required mechanisms in RFC 2425, which other
 -- libraries may use to implement parsing and generating specific profiles,
 -- such as vCard.
+
+{-# LANGUAGE EmptyDataDecls #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternGuards #-}
+
 module Codec.MIME.ContentType.Text.Directory
     ( -- * Types
       Directory, Property(..)

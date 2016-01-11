@@ -15,12 +15,17 @@ build-type:     Simple
 tested-with:    GHC == 6.10
 
 library
-        build-depends:   base >= 3 && < 5, bytestring >= 0.9, regex-pcre >= 0.94,
-                         old-locale, time >= 1.1, containers, base64-string
-        extensions:      CPP, OverloadedStrings, EmptyDataDecls, PatternGuards
-                         GeneralizedNewtypeDeriving, DeriveDataTypeable
-        exposed-modules: Codec.MIME.ContentType.Text.Directory
-                         Data.ByteString.Lazy.Char8.Caseless
+  build-depends:
+    base >= 3 && < 5,
+    base64-string,
+    bytestring >= 0.9,
+    containers,
+    old-locale,
+    regex-pcre >= 0.94,
+    time >= 1.1
+  exposed-modules:
+    Codec.MIME.ContentType.Text.Directory
+    Data.ByteString.Lazy.Char8.Caseless
 
 source-repository head
   type:     git

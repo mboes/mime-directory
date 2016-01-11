@@ -1,17 +1,22 @@
 -- | A variant of ByteString where strings differing in the case of some of
 -- its characters are identified.
+
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Data.ByteString.Lazy.Char8.Caseless
     (ByteString, sensitize, unsensitize, concat, intercalate, pack, unpack) where
 
 import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Char (toLower)
 import GHC.Exts (IsString)
-import Data.Monoid (Monoid)
-import Prelude hiding (concat)
+import Data.Monoid
 #if defined(__GLASGOW_HASKELL__)
 import Data.Typeable (Typeable)
 import Data.Data (Data)
 #endif
+import Prelude hiding (concat)
 
 -- | Wrapper for case insensitive strings.
 newtype ByteString = I B.ByteString
