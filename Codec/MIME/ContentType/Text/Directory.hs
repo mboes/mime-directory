@@ -54,7 +54,7 @@ module Codec.MIME.ContentType.Text.Directory
     , printProperty
     ) where
 
-import Control.Applicative
+import Control.Applicative hiding (many)
 import Data.Time
 import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
