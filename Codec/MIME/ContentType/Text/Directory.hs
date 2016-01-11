@@ -54,6 +54,7 @@ module Codec.MIME.ContentType.Text.Directory
     , printProperty
     ) where
 
+import Control.Applicative
 import Data.Time
 import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
@@ -63,7 +64,7 @@ import qualified Data.ByteString.Lazy.Char8.Caseless as I
 import qualified Data.Map as Map
 import Control.Monad (liftM, ap)
 import System.IO.Unsafe
-
+import Prelude -- silence AMP warnings.
 
 -- | A directory is a list of groups of semantically related entities. These
 -- entities are grouped together in RFC 2425 using @BEGIN ... END@ pairs.
