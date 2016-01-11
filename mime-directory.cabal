@@ -22,7 +22,7 @@ library
     containers,
     old-locale,
     regex-pcre >= 0.94,
-    time >= 1.5
+    time >= 1.4
   exposed-modules:
     Codec.MIME.ContentType.Text.Directory
     Data.ByteString.Lazy.Char8.Caseless

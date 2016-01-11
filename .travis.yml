@@ -15,7 +15,7 @@ matrix:
   - env: ARGS="--resolver lts-3" BUILD=stack
     addons: {apt: {packages: [libgmp-dev]}}
 
-  - env: ARGS="--resolver lts-2" BUILD=stack
+  - env: ARGS="--stack-yaml stack-7.8.yaml" BUILD=stack
     addons: {apt: {packages: [libgmp-dev]}}
 
   - env: ARGS="--resolver nightly" BUILD=stack

@@ -1,7 +1,10 @@
-resolver: lts-3.16
+resolver: lts-2.22
 
 packages:
 - '.'
+
+extra-deps:
+- regex-pcre-0.94.4
 
 nix:
   enable: false
