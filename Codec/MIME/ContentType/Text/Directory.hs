@@ -30,7 +30,6 @@ module Codec.MIME.ContentType.Text.Directory
     , printDirectory, printDirectory', printProperty) where
 
 import Data.Time
-import Data.Char (toLower)
 import Data.Maybe (fromJust)
 import Text.Regex.PCRE.ByteString.Lazy
 import qualified Codec.Binary.Base64.String as Base64
@@ -73,7 +72,7 @@ data Parameter = Param
 
 -- | Find the parameter values for a given parameter name.
 lookupParameter :: I.ByteString -> [Parameter] -> Maybe [B.ByteString]
-lookupParameter pname [] = Nothing
+lookupParameter _ [] = Nothing
 lookupParameter pname (p:ps)
     | param_name p == pname = Just (param_values p)
     | otherwise = lookupParameter pname ps
@@ -136,9 +135,9 @@ instance Monad P where
     return = pure
     m >>= k = P $ \s -> let (a, s') = unP m s in unP (k a) s'
 
-p :: B.ByteString   -- ^ Text of the regular expression.
+pattern :: B.ByteString   -- ^ Text of the regular expression.
   -> P B.ByteString -- ^ The matching part of the input.
-p pat =
+pattern pat =
     let Right r = unsafePerformIO $ compile compBlank execAnchored pat
     in P $ \s -> unsafePerformIO $ do
                    Right result <- regexec r s
@@ -186,6 +185,7 @@ groupByBeginEnd xs = tail $ foldr f [[]] xs
     where f p (ps:pss) | p @@ "begin" =
                            [] : (p:ps) : pss
           f p (ps:pss) = (p:ps):pss
+          f _ _ = error "impossible."
 
 -- | Build a directory from a list of properties.
 fromList :: [Property u] -> Directory u
@@ -206,7 +206,8 @@ pa_property valparse = do
   params <- case sept of
               ";" -> pa_parameterList
               ":" -> return []
-  rest <- p ".*$"
+              _ -> error "pa_property: bad separator."
+  rest <- pattern ".*$"
   let group = if B.null groupt then Nothing else Just (I.unsensitize groupt)
   let typ = Type { type_group = group, type_name = I.unsensitize typt }
       mkprop v = Prop { prop_type = typ
@@ -230,14 +231,17 @@ pa_parameterList = aux where
              ps <- case sep of
                      ';' -> aux
                      ':' -> return []
+                     _ -> error "pa_parameterList: bad separator."
              return $ Param { param_name = I.unsensitize name, param_values = vs } : ps
 
 -- | Properties may indicate an encoding, so this decodes the value
 -- if need be before parsing.
+decodeValue :: [Parameter] -> B.ByteString -> B.ByteString
 decodeValue = codec Base64.decode
 
 -- | Properties may indicate an encoding, so this encodes the value if need be
 -- after printing.
+encodeValue :: [Parameter] -> B.ByteString -> B.ByteString
 encodeValue = codec Base64.encode
 
 codec :: (String -> String) -> [Parameter] -> B.ByteString -> B.ByteString
@@ -293,6 +297,7 @@ pa_textList _ s = map (Text . B.pack . B.unpack) $ B.foldr f [B.empty] s
                             B.append "\r\n" xs : xss
           f '\\' (xs:xss) | Just ('\\',_) <- B.uncons xs = B.cons '\\' xs : xss
           f x (xs:xss) = B.cons x xs : xss
+          f _ _ = error "impossible"
 
 -- | Take a parser for single values to a parser for a list of values. This
 -- assumes that the separator between values is the "," character, and that
