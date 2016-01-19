@@ -58,11 +58,11 @@ module Codec.MIME.ContentType.Text.Directory
 import Control.Applicative hiding (many)
 import Data.Time (Day, DiffTime, ParseTime, UTCTime, utctDayTime)
 #if MIN_VERSION_time(1,5,0)
-import Data.Time (TimeLocale, defaultTimeLocale, iso8601DateFormat, parseTimeOrError)
+import Data.Time (TimeLocale, defaultTimeLocale, iso8601DateFormat, parseTimeOrError, parseTimeM)
 #else
-import Data.Time (readTime)
+import qualified Data.Time as T (readTime, parseTime)
 #endif
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, mapMaybe)
 import Text.Regex.PCRE.ByteString.Lazy
 import qualified Codec.Binary.Base64.String as Base64
 import qualified Data.ByteString.Lazy.Char8 as B
@@ -291,10 +291,14 @@ codec f params input =
 
 -- | time-1.4 compat wrapper.
 parseTime :: ParseTime t => TimeLocale -> String -> String -> t
+tryParseTime :: ParseTime t => TimeLocale -> String -> String -> Maybe t
+
 #if MIN_VERSION_time(1,5,0)
 parseTime = parseTimeOrError True
+tryParseTime = parseTimeM True
 #else
-parseTime = readTime
+parseTime = T.readTime
+tryParseTime = T.parseTime
 #endif
 
 pa_URI :: ValueParser u
@@ -315,8 +319,10 @@ pa_time _ =
 pa_dateTime :: ValueParser u
 pa_dateTime _ =
     (:[]) . DateTime .
-    parseTime defaultTimeLocale (iso8601DateFormat (Just "T%T")) .
+    (\inp -> head $ mapMaybe (\form -> tryParseTime defaultTimeLocale form inp) formats) .
     B.unpack
+  where
+    formats = ["%Y%m%dT%H%M%SZ", "%FT%TZ", "%FT%T%z"]
 
 pa_integer :: ValueParser u
 pa_integer _ = (:[]) . Integer . fst . fromJust . B.readInteger
