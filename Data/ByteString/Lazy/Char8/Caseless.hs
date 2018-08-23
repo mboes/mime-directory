@@ -27,7 +27,7 @@ import Prelude hiding (concat)
 
 -- | Wrapper for case insensitive strings.
 newtype ByteString = I B.ByteString
-    deriving ( Eq, Ord, Show, Monoid
+    deriving ( Eq, Ord, Show, Semigroup, Monoid
 #if defined(__GLASGOW_HASKELL__)
              , IsString, Data, Typeable
 #endif
