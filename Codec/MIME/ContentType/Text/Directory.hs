@@ -69,6 +69,7 @@ import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.ByteString.Lazy.Char8.Caseless as I
 import qualified Data.Map as Map
 import Control.Monad (liftM, ap)
+import qualified Control.Monad.Fail as Fail
 import System.IO.Unsafe
 #if !MIN_VERSION_time(1,5,0)
 import System.Locale (TimeLocale, defaultTimeLocale, iso8601DateFormat)
@@ -169,6 +170,9 @@ instance Applicative P where
 instance Monad P where
     return = pure
     m >>= k = P $ \s -> let (a, s') = unP m s in unP (k a) s'
+
+instance Fail.MonadFail P where
+    fail = undefined
 
 pattern :: B.ByteString   -- ^ Text of the regular expression.
   -> P B.ByteString -- ^ The matching part of the input.
